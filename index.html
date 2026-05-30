@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sales Price Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F5F3;--surface:#FFFFFF;--ink:#1E2522;--muted:#8A938C;--faint:#AEB6AF;
+    --line:#ECEFEC;--accent:#5E8068;--accent-deep:#4C6B56;--accent-soft:#EAF1EC;
+    --accent-tint:#F4F8F5;--danger:#C06B5E;
+    --shadow:0 1px 2px rgba(30,37,34,.04),0 8px 24px rgba(30,37,34,.05);
+    --shadow-lift:0 4px 12px rgba(30,37,34,.06),0 16px 40px rgba(30,37,34,.08);
+    --r:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(120% 90% at 50% -10%,#EAF0EB 0%,var(--bg) 55%);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100%;display:flex;justify-content:center;padding:clamp(14px,4vw,40px) 16px 64px;}
+  .app{width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px;}
+
+  .lang-row{display:flex;justify-content:flex-end;}
+  .mini-seg{display:inline-flex;background:var(--surface);border-radius:10px;padding:3px;box-shadow:var(--shadow);}
+  .mini-seg button{border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);padding:6px 13px;border-radius:7px;cursor:pointer;transition:all .18s;letter-spacing:.02em;}
+  .mini-seg button.on{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(76,107,86,.3);}
+
+  header{padding:0 4px;}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  h1{font-size:clamp(26px,7vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.1;}
+  header p{margin-top:8px;color:var(--muted);font-size:14px;max-width:36ch;}
+
+  .seg{display:flex;background:var(--surface);border-radius:14px;padding:4px;box-shadow:var(--shadow);position:relative;}
+  .seg button{flex:1;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);padding:11px 8px;border-radius:10px;z-index:1;transition:color .2s;}
+  .seg button.on{color:#fff;}
+  .seg .glider{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:var(--accent);border-radius:10px;transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(94,128,104,.3);}
+  .seg.adv .glider{transform:translateX(100%);}
+
+  .tpl{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;}
+  .tpl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .tpl-head .lbl{font-size:13px;font-weight:600;color:var(--muted);}
+  .tpl-save{border:none;background:var(--accent-soft);color:var(--accent-deep);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 12px;border-radius:9px;display:flex;align-items:center;gap:5px;transition:background .18s;}
+  .tpl-save:hover{background:#DEE9E1;}
+  .tpl-save svg{width:14px;height:14px;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 7px 6px 13px;font-size:13px;font-weight:500;animation:popIn .3s cubic-bezier(.2,.9,.3,1.3);}
+  .chip .load{background:none;border:none;cursor:pointer;font:inherit;color:var(--ink);font-weight:500;padding:0;}
+  .chip .load:hover{color:var(--accent-deep);}
+  .chip .x{border:none;background:none;cursor:pointer;color:var(--faint);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;}
+  .chip .x:hover{color:var(--danger);background:#FBF0EE;}
+  .chip .x svg{width:11px;height:11px;}
+  .tpl-empty{font-size:12.5px;color:var(--faint);}
+
+  .card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:22px;}
+  .section-label{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;}
+  .count-pill{font-size:12px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);padding:3px 9px;border-radius:999px;}
+  .hint{font-size:11.5px;color:var(--faint);font-weight:400;margin-top:-8px;margin-bottom:14px;line-height:1.4;}
+
+  .field{position:relative;background:var(--bg);border-radius:12px;transition:background .2s,box-shadow .2s;}
+  .field:focus-within{background:var(--accent-tint);box-shadow:inset 0 0 0 1.5px var(--accent);}
+  .field input{width:100%;border:none;background:transparent;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);padding:13px 14px;outline:none;}
+  .field input::placeholder{color:var(--faint);font-weight:400;}
+  .field.money input{padding-left:30px;text-align:right;font-variant-numeric:tabular-nums;}
+  .field.money::before{content:"Rp";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--faint);pointer-events:none;}
+  .field.pct input{text-align:right;padding-right:30px;font-variant-numeric:tabular-nums;}
+  .field.pct::after{content:"%";position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--faint);pointer-events:none;}
+
+  .input-row{display:grid;grid-template-columns:1fr 124px auto;gap:8px;}
+  .add-btn{border:none;background:var(--accent);color:#fff;width:48px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s;box-shadow:0 2px 8px rgba(94,128,104,.3);}
+  .add-btn:hover{background:var(--accent-deep);}
+  .add-btn:active{transform:scale(.92);}
+  .add-btn svg{width:20px;height:20px;}
+  .add-btn.shake{animation:shake .35s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+  .items{list-style:none;margin-top:18px;display:flex;flex-direction:column;gap:8px;}
+  .items:empty{margin-top:0;}
+  .item{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 10px 13px 16px;box-shadow:0 1px 2px rgba(30,37,34,.03);transform-origin:top center;animation:popIn .32s cubic-bezier(.2,.9,.3,1.3);}
+  .item.removing{animation:popOut .26s ease forwards;}
+  @keyframes popIn{from{opacity:0;transform:translateY(-6px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+  @keyframes popOut{to{opacity:0;transform:translateX(14px) scale(.96);height:0;padding-top:0;padding-bottom:0;margin-top:-8px;border-width:0;}}
+  .item-name{flex:1;font-size:14.5px;font-weight:500;line-height:1.3;overflow-wrap:anywhere;}
+  .item-cost{font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;margin-right:2px;}
+  .iconbtn{border:none;background:transparent;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--faint);transition:color .18s,background .18s;flex-shrink:0;}
+  .iconbtn.edit:hover{color:var(--accent-deep);background:var(--accent-soft);}
+  .iconbtn.del:hover{color:var(--danger);background:#FBF0EE;}
+  .iconbtn svg{width:15px;height:15px;}
+  .item.editing{display:grid;grid-template-columns:1fr 108px auto;gap:7px;padding:9px;align-items:center;}
+  .item.editing .field input{padding:11px 12px;font-size:14px;}
+  .item.editing .field.money input{padding-left:28px;}
+  .ok{border:none;background:var(--accent);color:#fff;width:44px;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s;}
+  .ok:hover{background:var(--accent-deep);}
+  .ok:active{transform:scale(.92);}
+  .ok svg{width:18px;height:18px;}
+  .empty{text-align:center;color:var(--faint);font-size:13.5px;padding:22px 12px 10px;line-height:1.5;}
+
+  .total{display:flex;align-items:baseline;justify-content:space-between;margin-top:20px;padding-top:18px;border-top:1px dashed var(--line);}
+  .total .lbl{font-size:13px;font-weight:600;color:var(--muted);}
+  .total .val{font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;}
+
+  .pieces-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;}
+  .pieces-row .txt{font-size:13px;font-weight:600;color:var(--muted);line-height:1.3;}
+  .stepper{display:inline-flex;align-items:center;background:var(--bg);border-radius:11px;padding:4px;gap:2px;flex-shrink:0;}
+  .step-btn{border:none;background:var(--surface);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:600;color:var(--accent-deep);box-shadow:0 1px 2px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;transition:transform .12s;line-height:1;}
+  .step-btn:active{transform:scale(.9);}
+  .stepper input{width:46px;border:none;background:transparent;text-align:center;font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);outline:none;font-variant-numeric:tabular-nums;}
+
+  .mat{display:grid;grid-template-columns:1fr 56px 96px auto;gap:7px;align-items:center;animation:popIn .3s cubic-bezier(.2,.9,.3,1.3);}
+  .mat.removing{animation:popOut .26s ease forwards;}
+  .mat .field input{padding:11px 12px;font-size:14px;}
+  .mat .field.money input{padding-left:28px;}
+  .mat .field.qty input{text-align:center;padding:11px 6px;}
+  .mat-head{display:grid;grid-template-columns:1fr 56px 96px auto;gap:7px;font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;padding:0 2px;}
+  .mat-head span:nth-child(2),.mat-head span:nth-child(3){text-align:center;}
+  .mat-head span:nth-child(4){text-align:right;}
+  .matlist{display:flex;flex-direction:column;gap:9px;}
+  .add-line{margin-top:14px;border:1.5px dashed var(--line);background:transparent;color:var(--accent-deep);font-family:inherit;font-size:13px;font-weight:600;width:100%;padding:12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .18s,background .18s;}
+  .add-line:hover{border-color:var(--accent);background:var(--accent-tint);}
+  .add-line svg{width:15px;height:15px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .flabel{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:7px;}
+  .row-out{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;font-size:13px;}
+  .row-out .lbl{color:var(--muted);font-weight:500;}
+  .row-out .v{font-weight:700;font-variant-numeric:tabular-nums;}
+
+  .margin-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;gap:12px;}
+  .margin-head .lbl{font-size:13px;font-weight:600;color:var(--muted);}
+  .margin-val{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--accent-deep);font-variant-numeric:tabular-nums;line-height:1;}
+  .margin-val span{font-size:17px;font-weight:600;}
+  .pmode{display:inline-flex;background:var(--bg);border-radius:9px;padding:3px;}
+  .pmode button{border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .18s;}
+  .pmode button.on{background:var(--surface);color:var(--accent-deep);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:var(--line);outline:none;cursor:pointer;background-image:linear-gradient(var(--accent),var(--accent));background-repeat:no-repeat;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 0 0 5px var(--accent),0 2px 6px rgba(76,107,86,.35);transition:transform .15s,box-shadow .15s;}
+  input[type="range"]::-webkit-slider-thumb:hover{box-shadow:0 0 0 6px var(--accent),0 2px 10px rgba(76,107,86,.45);}
+  input[type="range"]:active::-webkit-slider-thumb{transform:scale(1.12);}
+  input[type="range"]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 0 0 5px var(--accent),0 2px 6px rgba(76,107,86,.35);}
+  .scale{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums;}
+
+  .result{background:linear-gradient(155deg,var(--accent-deep),var(--accent));border-radius:var(--r);padding:28px 24px;color:#fff;box-shadow:var(--shadow-lift),0 12px 32px rgba(76,107,86,.28);position:relative;overflow:hidden;}
+  .result::after{content:"";position:absolute;right:-40px;top:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none;}
+  .result .lbl{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);}
+  .price{margin-top:10px;font-size:clamp(36px,11vw,50px);font-weight:800;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;transition:transform .12s;}
+  .price.pulse{animation:pulse .3s ease;}
+  @keyframes pulse{50%{transform:scale(1.035);}}
+  .result .sub{margin-top:14px;font-size:13px;color:rgba(255,255,255,.82);display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .result .sub b{font-weight:600;color:#fff;}
+  .breakdown{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:9px;}
+  .bd-row{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums;gap:10px;}
+  .bd-row span:first-child{text-align:left;}
+  .bd-row.strong{font-weight:700;color:#fff;}
+  .bd-row .neg{color:#FFD9CF;}
+
+  footer{text-align:center;font-size:12px;color:var(--faint);padding-top:4px;line-height:1.5;}
+  .hidden{display:none !important;}
+  @media (max-width:420px){
+    .input-row{grid-template-columns:1fr 100px auto;gap:6px;}
+    .mat,.mat-head{grid-template-columns:1fr 46px 84px auto;gap:5px;}
+    .card{padding:18px;}
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <div class="lang-row">
+      <div class="mini-seg" id="langSeg">
+        <button data-l="en" class="on">EN</button>
+        <button data-l="id">ID</button>
+      </div>
+    </div>
+
+    <header>
+      <div class="eyebrow" data-i18n="eyebrow">Pricing made simple</div>
+      <h1 data-i18n="title">Sales Price Calculator</h1>
+      <p data-i18n="subtitle">Add your costs, set your margin, and get a fair selling price in seconds.</p>
+    </header>
+
+    <div class="seg" id="seg">
+      <div class="glider"></div>
+      <button id="segSimple" class="on" data-i18n="simple">Simple</button>
+      <button id="segAdv" data-i18n="advanced">Advanced</button>
+    </div>
+
+    <div class="tpl">
+      <div class="tpl-head">
+        <span class="lbl" data-i18n="savedTemplates">Saved templates</span>
+        <button class="tpl-save" id="saveTpl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          <span data-i18n="saveCurrent">Save current</span>
+        </button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="tpl-empty" id="tplEmpty" data-i18n="tplEmpty">No templates yet — save a setup to reuse it later.</div>
+    </div>
+
+    <!-- SIMPLE -->
+    <div id="simplePanel">
+      <section class="card">
+        <div class="section-label">
+          <span data-i18n="productionCosts">Production costs</span>
+          <span class="count-pill" id="countPill">0</span>
+        </div>
+        <div class="input-row">
+          <div class="field"><input id="nameInput" type="text" data-ph="itemNamePh" placeholder="e.g. Cotton fabric, 3 m" autocomplete="off" /></div>
+          <div class="field money"><input id="costInput" type="text" inputmode="numeric" placeholder="0" autocomplete="off" /></div>
+          <button class="add-btn" id="addBtn" aria-label="Add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <ul class="items" id="itemList"></ul>
+        <div class="empty" id="emptyState" data-i18n="emptyItems">No items yet — add your first cost above.</div>
+        <div class="total"><span class="lbl" data-i18n="totalProductionCost">Total Production Cost</span><span class="val" id="totalCost">Rp 0</span></div>
+        <div class="pieces-row">
+          <span class="txt" data-i18n="piecesLabel">Pieces produced from this cost</span>
+          <div class="stepper">
+            <button class="step-btn" id="piecesMinus" aria-label="-">&minus;</button>
+            <input id="piecesInput" type="text" inputmode="numeric" value="1" />
+            <button class="step-btn" id="piecesPlus" aria-label="+">+</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:16px;">
+        <div class="margin-head"><span class="lbl" data-i18n="profitMargin">Profit Margin</span><span class="margin-val"><span id="marginNum">50</span><span>%</span></span></div>
+        <input type="range" id="margin" min="0" max="200" step="5" value="50" />
+        <div class="scale"><span>0%</span><span>50%</span><span>100%</span><span>150%</span><span>200%</span></div>
+      </section>
+
+      <section class="result" style="margin-top:16px;">
+        <div class="lbl" id="sp_label">Selling Price</div>
+        <div class="price" id="sellingPrice">Rp 0</div>
+        <div class="sub" id="sp_sub"></div>
+      </section>
+    </div>
+
+    <!-- ADVANCED -->
+    <div id="advPanel" class="hidden">
+      <section class="card">
+        <div class="section-label"><span data-i18n="materialCosts">Material costs</span></div>
+        <div class="hint" data-i18n="materialHint">Quantity × unit cost, per single product.</div>
+        <div class="mat-head"><span data-i18n="colItem">Item</span><span data-i18n="colQty">Qty</span><span data-i18n="colUnitCost">Unit cost</span><span data-i18n="colTotal">Total</span></div>
+        <div class="matlist" id="matList"></div>
+        <button class="add-line" id="addMat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addMaterial">Add material</span></button>
+        <div class="total"><span class="lbl" data-i18n="materialsSubtotal">Materials subtotal</span><span class="val" id="matSubtotal">Rp 0</span></div>
+      </section>
+
+      <section class="card" style="margin-top:16px;">
+        <div class="section-label"><span data-i18n="laborOverhead">Labor &amp; overhead</span></div>
+        <span class="flabel" data-i18n="laborLabel">Labor — hours × rate</span>
+        <div class="grid2">
+          <div class="field"><input id="laborHours" type="text" inputmode="decimal" data-ph="hoursPh" placeholder="Hours" autocomplete="off" /></div>
+          <div class="field money"><input id="laborRate" type="text" inputmode="numeric" data-ph="ratePh" placeholder="Rate / hour" autocomplete="off" /></div>
+        </div>
+        <div class="row-out"><span class="lbl" data-i18n="laborCost">Labor cost</span><span class="v" id="laborOut">Rp 0</span></div>
+        <span class="flabel" style="margin-top:18px;" data-i18n="overheadLabel">Overhead — total ÷ batch size</span>
+        <div class="grid2">
+          <div class="field money"><input id="ohTotal" type="text" inputmode="numeric" data-ph="totalOverheadPh" placeholder="Total overhead" autocomplete="off" /></div>
+          <div class="field"><input id="batch" type="text" inputmode="numeric" data-ph="unitsBatchPh" placeholder="Units in batch" autocomplete="off" /></div>
+        </div>
+        <div class="row-out"><span class="lbl" data-i18n="overheadPerUnit">Overhead / unit</span><span class="v" id="ohOut">Rp 0</span></div>
+      </section>
+
+      <section class="card" style="margin-top:16px;">
+        <div class="margin-head">
+          <div><span class="lbl" id="profitLbl">Markup</span><div class="margin-val" style="margin-top:6px;"><span id="advProfitNum">50</span><span>%</span></div></div>
+          <div class="pmode" id="profitMode"><button data-m="markup" class="on" data-i18n="markup">Markup</button><button data-m="margin" data-i18n="margin">Margin</button></div>
+        </div>
+        <input type="range" id="advMargin" min="0" max="200" step="5" value="50" />
+        <div class="scale" id="advScale"><span>0%</span><span>50%</span><span>100%</span><span>150%</span><span>200%</span></div>
+        <div class="hint" id="profitHint" style="margin-top:12px;margin-bottom:0;">Markup is added on top of cost.</div>
+      </section>
+
+      <section class="card" style="margin-top:16px;">
+        <div class="section-label"><span data-i18n="feesTitle">Marketplace fees &amp; tax</span></div>
+        <div class="hint" data-i18n="feesHint">The listing price is raised so your profit survives platform cuts.</div>
+        <div class="grid2">
+          <div><span class="flabel" data-i18n="marketplaceFee">Marketplace fee</span><div class="field pct"><input id="mpFee" type="text" inputmode="decimal" placeholder="0" autocomplete="off" /></div></div>
+          <div><span class="flabel" data-i18n="paymentFee">Payment fee</span><div class="field pct"><input id="payFee" type="text" inputmode="decimal" placeholder="0" autocomplete="off" /></div></div>
+        </div>
+        <div style="margin-top:12px;"><span class="flabel" data-i18n="taxPpn">Tax / PPN</span><div class="field pct"><input id="taxPct" type="text" inputmode="decimal" placeholder="0" autocomplete="off" /></div></div>
+      </section>
+
+      <section class="result" style="margin-top:16px;">
+        <div class="lbl" data-i18n="finalPrice">Final Price &middot; customer pays</div>
+        <div class="price" id="advFinal">Rp 0</div>
+        <div class="breakdown">
+          <div class="bd-row"><span data-i18n="baseCostUnit">Base cost / unit</span><span id="bdBase">Rp 0</span></div>
+          <div class="bd-row"><span id="bdProfitLbl">Your profit</span><span id="bdProfit">Rp 0</span></div>
+          <div class="bd-row"><span data-i18n="feesRow">Marketplace + payment fees</span><span class="neg" id="bdFees">− Rp 0</span></div>
+          <div class="bd-row"><span id="bdTaxLbl">Tax / PPN</span><span id="bdTax">+ Rp 0</span></div>
+          <div class="bd-row strong"><span data-i18n="youReceive">You actually receive</span><span id="bdReceive">Rp 0</span></div>
+          <div class="bd-row strong"><span data-i18n="realMargin">Real margin</span><span id="bdMargin">0%</span></div>
+        </div>
+      </section>
+    </div>
+
+    <footer id="footer">Selling Price = Total Cost × (1 + Margin %)</footer>
+  </main>
+
+<script>
+(function(){
+  const I18N={
+    en:{
+      eyebrow:"Pricing made simple",title:"Sales Price Calculator",
+      subtitle:"Add your costs, set your margin, and get a fair selling price in seconds.",
+      simple:"Simple",advanced:"Advanced",savedTemplates:"Saved templates",saveCurrent:"Save current",
+      tplEmpty:"No templates yet — save a setup to reuse it later.",
+      productionCosts:"Production costs",itemNamePh:"e.g. Cotton fabric, 3 m",
+      emptyItems:"No items yet — add your first cost above.",totalProductionCost:"Total Production Cost",
+      piecesLabel:"Pieces produced from this cost",profitMargin:"Profit Margin",
+      sellingPrice:"Selling Price",sellingPricePerPiece:"Selling Price · per piece",
+      costWord:"cost",marginWord:"margin",profitWord:"profit",costPerPc:"cost/pc",piecesWord:"pcs",
+      item:"item",items:"items",
+      materialCosts:"Material costs",materialHint:"Quantity × unit cost, per single product.",
+      colItem:"Item",colQty:"Qty",colUnitCost:"Unit cost",colTotal:"Total",
+      addMaterial:"Add material",materialsSubtotal:"Materials subtotal",materialPh:"Material",
+      laborOverhead:"Labor & overhead",laborLabel:"Labor — hours × rate",hoursPh:"Hours",ratePh:"Rate / hour",
+      laborCost:"Labor cost",overheadLabel:"Overhead — total ÷ batch size",
+      totalOverheadPh:"Total overhead",unitsBatchPh:"Units in batch",overheadPerUnit:"Overhead / unit",
+      markup:"Markup",margin:"Margin",
+      markupHint:"Markup is added on top of cost. 50% markup on Rp 10.000 = Rp 15.000.",
+      marginHint:"Margin is profit ÷ selling price. 50% margin on Rp 10.000 cost = Rp 20.000.",
+      feesTitle:"Marketplace fees & tax",
+      feesHint:"The listing price is raised so your profit survives platform cuts. Tax is added on top for the customer.",
+      marketplaceFee:"Marketplace fee",paymentFee:"Payment fee",taxPpn:"Tax / PPN",
+      finalPrice:"Final Price · customer pays",baseCostUnit:"Base cost / unit",yourProfit:"Your profit",
+      feesRow:"Marketplace + payment fees",taxRow:"Tax / PPN",youReceive:"You actually receive",realMargin:"Real margin",
+      footerSimple:"Selling Price = Total Cost × (1 + Margin %)",
+      footerAdv:"Listing price is grossed up to absorb fees; tax is added for the customer.",
+      templateNamePrompt:"Template name:",defSimple:"Simple product",defAdvanced:"Advanced product"
+    },
+    id:{
+      eyebrow:"Hitung harga dengan mudah",title:"Kalkulator Harga Jual",
+      subtitle:"Masukkan biaya, atur margin, dan dapatkan harga jual yang adil dalam hitungan detik.",
+      simple:"Sederhana",advanced:"Lanjutan",savedTemplates:"Template tersimpan",saveCurrent:"Simpan",
+      tplEmpty:"Belum ada template — simpan pengaturan untuk dipakai lagi nanti.",
+      productionCosts:"Biaya produksi",itemNamePh:"mis. Kain katun, 3 m",
+      emptyItems:"Belum ada item — tambahkan biaya pertama di atas.",totalProductionCost:"Total Biaya Produksi",
+      piecesLabel:"Jumlah unit dari biaya ini",profitMargin:"Margin Keuntungan",
+      sellingPrice:"Harga Jual",sellingPricePerPiece:"Harga Jual · per unit",
+      costWord:"biaya",marginWord:"margin",profitWord:"untung",costPerPc:"biaya/unit",piecesWord:"unit",
+      item:"item",items:"item",
+      materialCosts:"Biaya bahan",materialHint:"Jumlah × harga satuan, per satu produk.",
+      colItem:"Bahan",colQty:"Qty",colUnitCost:"Harga satuan",colTotal:"Total",
+      addMaterial:"Tambah bahan",materialsSubtotal:"Subtotal bahan",materialPh:"Bahan",
+      laborOverhead:"Tenaga kerja & overhead",laborLabel:"Tenaga kerja — jam × tarif",hoursPh:"Jam",ratePh:"Tarif / jam",
+      laborCost:"Biaya tenaga kerja",overheadLabel:"Overhead — total ÷ ukuran batch",
+      totalOverheadPh:"Total overhead",unitsBatchPh:"Unit per batch",overheadPerUnit:"Overhead / unit",
+      markup:"Markup",margin:"Margin",
+      markupHint:"Markup ditambahkan di atas biaya. Markup 50% dari Rp 10.000 = Rp 15.000.",
+      marginHint:"Margin = untung ÷ harga jual. Margin 50% dari biaya Rp 10.000 = Rp 20.000.",
+      feesTitle:"Biaya marketplace & pajak",
+      feesHint:"Harga listing dinaikkan agar untungmu tetap utuh setelah potongan platform. Pajak ditambahkan untuk pembeli.",
+      marketplaceFee:"Biaya marketplace",paymentFee:"Biaya pembayaran",taxPpn:"Pajak / PPN",
+      finalPrice:"Harga Akhir · dibayar pembeli",baseCostUnit:"Biaya pokok / unit",yourProfit:"Keuntungan kamu",
+      feesRow:"Biaya marketplace + pembayaran",taxRow:"Pajak / PPN",youReceive:"Yang kamu terima",realMargin:"Margin sebenarnya",
+      footerSimple:"Harga Jual = Total Biaya × (1 + Margin %)",
+      footerAdv:"Harga listing dinaikkan untuk menutup biaya; pajak ditambahkan untuk pembeli.",
+      templateNamePrompt:"Nama template:",defSimple:"Produk sederhana",defAdvanced:"Produk lanjutan"
+    }
+  };
+  let lang='en';
+  const t = k => (I18N[lang] && I18N[lang][k]!=null) ? I18N[lang][k] : (I18N.en[k]||k);
+
+  const rp=new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0});
+  const fmt=n=>rp.format(Math.max(0,Math.round(n||0))).replace(/\u00A0/,' ');
+  const digits=s=>Number(String(s).replace(/\D/g,''))||0;
+  const num=s=>{const v=parseFloat(String(s).replace(/[^\d.]/g,''));return isNaN(v)?0:v;};
+  const id=x=>document.getElementById(x);
+
+  let nextId=1,nextMat=1,nextTpl=1,editingId=null;
+  const state={
+    mode:'simple',
+    simple:{items:[],margin:50,pieces:1},
+    advanced:{materials:[],laborHours:0,laborRate:0,ohTotal:0,batch:1,profitPct:50,profitMode:'markup',mpFee:0,payFee:0,taxPct:0},
+    templates:[]
+  };
+
+  // ---- mode ----
+  function updateFooter(){ id('footer').textContent = state.mode==='simple'?t('footerSimple'):t('footerAdv'); }
+  function setMode(m){
+    state.mode=m;
+    id('seg').classList.toggle('adv',m==='advanced');
+    id('segSimple').classList.toggle('on',m==='simple');
+    id('segAdv').classList.toggle('on',m==='advanced');
+    id('simplePanel').classList.toggle('hidden',m!=='simple');
+    id('advPanel').classList.toggle('hidden',m!=='advanced');
+    updateFooter();
+    if(m==='advanced' && state.advanced.materials.length===0) addMaterial();
+    calc();
+  }
+  id('segSimple').onclick=()=>setMode('simple');
+  id('segAdv').onclick=()=>setMode('advanced');
+
+  // ---- simple items ----
+  const nameInput=id('nameInput'),costInput=id('costInput'),addBtn=id('addBtn'),itemList=id('itemList'),emptyState=id('emptyState');
+  costInput.addEventListener('input',()=>{const d=costInput.value.replace(/\D/g,'');costInput.value=d?Number(d).toLocaleString('id-ID'):'';});
+  function addItem(){
+    const name=nameInput.value.trim(),cost=digits(costInput.value);
+    if(!name||cost<=0){addBtn.classList.remove('shake');void addBtn.offsetWidth;addBtn.classList.add('shake');(name?costInput:nameInput).focus();return;}
+    state.simple.items.push({id:nextId++,name,cost});
+    nameInput.value='';costInput.value='';nameInput.focus();renderItems();
+  }
+  function removeItem(iid,el){el.classList.add('removing');el.addEventListener('animationend',()=>{const i=state.simple.items.findIndex(x=>x.id===iid);if(i>-1)state.simple.items.splice(i,1);renderItems();},{once:true});}
+  const TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 7h12M9 7V5h6v2M10 11v6M14 11v6M7 7l1 13h8l1-13"/></svg>';
+  const PENCIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+  const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  function renderItems(){
+    itemList.querySelectorAll('.item:not(.removing)').forEach(n=>n.remove());
+    state.simple.items.forEach(it=>{
+      const li=document.createElement('li');li.className='item';
+      if(editingId===it.id){
+        li.classList.add('editing');
+        li.innerHTML='<div class="field"><input class="e-name" type="text"></div><div class="field money"><input class="e-cost" type="text" inputmode="numeric"></div><button class="ok" aria-label="Save">'+CHECK+'</button>';
+        const ne=li.querySelector('.e-name'),ce=li.querySelector('.e-cost');
+        ne.value=it.name; ce.value=it.cost.toLocaleString('id-ID');
+        ce.addEventListener('input',()=>{const d=ce.value.replace(/\D/g,'');ce.value=d?Number(d).toLocaleString('id-ID'):'';});
+        const save=()=>{it.name=ne.value.trim()||it.name; it.cost=digits(ce.value); editingId=null; renderItems();};
+        li.querySelector('.ok').onclick=save;
+        [ne,ce].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')save();}));
+        itemList.appendChild(li);
+        setTimeout(()=>{ce.focus();ce.select();},0);
+        return;
+      }
+      li.innerHTML='<span class="item-name"></span><span class="item-cost">'+fmt(it.cost)+'</span><button class="iconbtn edit" aria-label="Edit">'+PENCIL+'</button><button class="iconbtn del" aria-label="Delete">'+TRASH+'</button>';
+      li.querySelector('.item-name').textContent=it.name;
+      li.querySelector('.edit').onclick=()=>{editingId=it.id;renderItems();};
+      li.querySelector('.del').onclick=()=>removeItem(it.id,li);
+      itemList.appendChild(li);
+    });
+    emptyState.style.display=state.simple.items.length?'none':'block';
+    const n=state.simple.items.length;
+    id('countPill').textContent=n+' '+(n===1?t('item'):t('items'));
+    calc();
+  }
+  addBtn.onclick=addItem;
+  [nameInput,costInput].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')addItem();}));
+  id('margin').addEventListener('input',e=>{state.simple.margin=Number(e.target.value);calc();});
+
+  // pieces stepper
+  const piecesInput=id('piecesInput');
+  function setPieces(v){v=Math.max(1,Math.round(v)||1);state.simple.pieces=v;piecesInput.value=v;calc();}
+  id('piecesMinus').onclick=()=>setPieces(state.simple.pieces-1);
+  id('piecesPlus').onclick=()=>setPieces(state.simple.pieces+1);
+  piecesInput.addEventListener('input',()=>{const v=parseInt(piecesInput.value.replace(/\D/g,''))||1;state.simple.pieces=Math.max(1,v);calc();});
+  piecesInput.addEventListener('blur',()=>{piecesInput.value=state.simple.pieces;});
+
+  // ---- advanced materials ----
+  const matList=id('matList');
+  function addMaterial(data){
+    const m=data||{id:nextMat++,name:'',qty:1,unitCost:0};
+    if(!data)state.advanced.materials.push(m);
+    const row=document.createElement('div');row.className='mat';row.dataset.id=m.id;
+    row.innerHTML='<div class="field"><input class="m-name" type="text" autocomplete="off"></div><div class="field qty"><input class="m-qty" type="text" inputmode="decimal" placeholder="1" autocomplete="off"></div><div class="field money"><input class="m-cost" type="text" inputmode="numeric" placeholder="0" autocomplete="off"></div><button class="iconbtn del" aria-label="Delete">'+TRASH+'</button>';
+    const nameEl=row.querySelector('.m-name'),qtyEl=row.querySelector('.m-qty'),costEl=row.querySelector('.m-cost');
+    nameEl.placeholder=t('materialPh');
+    nameEl.value=m.name; qtyEl.value=m.qty||''; costEl.value=m.unitCost?m.unitCost.toLocaleString('id-ID'):'';
+    nameEl.addEventListener('input',()=>{m.name=nameEl.value;});
+    qtyEl.addEventListener('input',()=>{m.qty=num(qtyEl.value);calc();});
+    costEl.addEventListener('input',()=>{const d=costEl.value.replace(/\D/g,'');costEl.value=d?Number(d).toLocaleString('id-ID'):'';m.unitCost=digits(costEl.value);calc();});
+    row.querySelector('.del').onclick=()=>{row.classList.add('removing');row.addEventListener('animationend',()=>{const i=state.advanced.materials.findIndex(x=>x.id===m.id);if(i>-1)state.advanced.materials.splice(i,1);row.remove();calc();},{once:true});};
+    matList.appendChild(row);calc();
+  }
+  id('addMat').onclick=()=>addMaterial();
+
+  function bindMoney(el,setter){el.addEventListener('input',()=>{const d=el.value.replace(/\D/g,'');el.value=d?Number(d).toLocaleString('id-ID'):'';setter(digits(el.value));calc();});}
+  function bindNum(el,setter){el.addEventListener('input',()=>{setter(num(el.value));calc();});}
+  bindNum(id('laborHours'),v=>state.advanced.laborHours=v);
+  bindMoney(id('laborRate'),v=>state.advanced.laborRate=v);
+  bindMoney(id('ohTotal'),v=>state.advanced.ohTotal=v);
+  bindNum(id('batch'),v=>state.advanced.batch=v);
+  bindNum(id('mpFee'),v=>state.advanced.mpFee=v);
+  bindNum(id('payFee'),v=>state.advanced.payFee=v);
+  bindNum(id('taxPct'),v=>state.advanced.taxPct=v);
+
+  const advMargin=id('advMargin');
+  advMargin.addEventListener('input',e=>{state.advanced.profitPct=Number(e.target.value);id('advProfitNum').textContent=e.target.value;calc();});
+  function refreshProfitMode(){
+    const mode=state.advanced.profitMode;
+    id('profitMode').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.m===mode));
+    id('profitLbl').textContent=mode==='markup'?t('markup'):t('margin');
+    if(mode==='margin'){advMargin.max=95;if(state.advanced.profitPct>95){state.advanced.profitPct=95;advMargin.value=95;id('advProfitNum').textContent=95;}id('advScale').innerHTML='<span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>95%</span>';id('profitHint').textContent=t('marginHint');}
+    else{advMargin.max=200;id('advScale').innerHTML='<span>0%</span><span>50%</span><span>100%</span><span>150%</span><span>200%</span>';id('profitHint').textContent=t('markupHint');}
+  }
+  id('profitMode').querySelectorAll('button').forEach(b=>{b.onclick=()=>{state.advanced.profitMode=b.dataset.m;refreshProfitMode();calc();};});
+
+  // ---- templates ----
+  const chips=id('chips');
+  id('saveTpl').onclick=()=>{
+    const def=state.mode==='simple'?((state.simple.items[0]||{}).name||t('defSimple')):((state.advanced.materials.find(m=>m.name)||{}).name||t('defAdvanced'));
+    const name=(prompt(t('templateNamePrompt'),def)||'').trim();
+    if(!name)return;
+    state.templates.push({id:nextTpl++,name,mode:state.mode,data:JSON.parse(JSON.stringify(state.mode==='simple'?state.simple:state.advanced))});
+    renderTemplates();
+  };
+  function loadTemplate(tp){
+    setMode(tp.mode);
+    if(tp.mode==='simple'){
+      state.simple=JSON.parse(JSON.stringify(tp.data));
+      if(state.simple.pieces==null)state.simple.pieces=1;
+      state.simple.items.forEach(it=>{if(it.id>=nextId)nextId=it.id+1;});
+      id('margin').value=state.simple.margin;id('marginNum').textContent=state.simple.margin;
+      piecesInput.value=state.simple.pieces;editingId=null;renderItems();
+    }else{
+      state.advanced=JSON.parse(JSON.stringify(tp.data));
+      matList.innerHTML='';state.advanced.materials.forEach(m=>{if(m.id>=nextMat)nextMat=m.id+1;addMaterial(m);});
+      id('laborHours').value=state.advanced.laborHours||'';
+      id('laborRate').value=state.advanced.laborRate?state.advanced.laborRate.toLocaleString('id-ID'):'';
+      id('ohTotal').value=state.advanced.ohTotal?state.advanced.ohTotal.toLocaleString('id-ID'):'';
+      id('batch').value=state.advanced.batch||'';
+      id('mpFee').value=state.advanced.mpFee||'';
+      id('payFee').value=state.advanced.payFee||'';
+      id('taxPct').value=state.advanced.taxPct||'';
+      advMargin.value=state.advanced.profitPct;id('advProfitNum').textContent=state.advanced.profitPct;
+      refreshProfitMode();advMargin.value=state.advanced.profitPct;calc();
+    }
+  }
+  function renderTemplates(){
+    chips.innerHTML='';
+    state.templates.forEach(tp=>{
+      const c=document.createElement('div');c.className='chip';
+      c.innerHTML='<button class="load"></button><button class="x" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+      c.querySelector('.load').textContent=tp.name+(tp.mode==='advanced'?' ·'+t('advanced').toLowerCase():'');
+      c.querySelector('.load').onclick=()=>loadTemplate(tp);
+      c.querySelector('.x').onclick=()=>{const i=state.templates.findIndex(x=>x.id===tp.id);if(i>-1)state.templates.splice(i,1);renderTemplates();};
+      chips.appendChild(c);
+    });
+    id('tplEmpty').style.display=state.templates.length?'none':'block';
+  }
+
+  // ---- calc ----
+  function setFill(sl){const pct=(Number(sl.value)/Number(sl.max))*100;sl.style.backgroundSize=pct+'% 100%';}
+  function pulse(el){el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse');}
+
+  function calcSimple(){
+    const total=state.simple.items.reduce((s,x)=>s+x.cost,0);
+    const m=state.simple.margin,pieces=Math.max(1,state.simple.pieces||1);
+    const costPer=total/pieces,sellPer=costPer*(1+m/100),batchTotal=total*(1+m/100);
+    id('totalCost').textContent=fmt(total);
+    id('marginNum').textContent=m;
+    const big=id('sellingPrice'),sub=id('sp_sub');
+    if(pieces>1){
+      id('sp_label').textContent=t('sellingPricePerPiece');
+      big.textContent=fmt(sellPer);
+      sub.innerHTML='<span><b>'+fmt(costPer)+'</b> '+t('costPerPc')+'</span><span>+</span><span><b>'+m+'%</b> '+t('marginWord')+'</span><span>·</span><span>×'+pieces+' '+t('piecesWord')+' = <b>'+fmt(batchTotal)+'</b></span>';
+    }else{
+      id('sp_label').textContent=t('sellingPrice');
+      big.textContent=fmt(batchTotal);
+      sub.innerHTML='<span><b>'+fmt(total)+'</b> '+t('costWord')+'</span><span>+</span><span><b>'+m+'%</b> '+t('marginWord')+'</span><span>=</span><span><b>'+fmt(batchTotal-total)+'</b> '+t('profitWord')+'</span>';
+    }
+    pulse(big);setFill(id('margin'));
+  }
+
+  function calcAdvanced(){
+    const a=state.advanced;
+    const matTotal=a.materials.reduce((s,m)=>s+(m.qty*m.unitCost),0);
+    const labor=a.laborHours*a.laborRate;
+    const ohUnit=a.batch>0?a.ohTotal/a.batch:0;
+    const base=matTotal+labor+ohUnit;
+    const p=a.profitPct/100;
+    const net=a.profitMode==='markup'?base*(1+p):(p<1?base/(1-p):0);
+    const feeRate=(a.mpFee+a.payFee)/100;
+    const listing=feeRate<1?net/(1-feeRate):0;
+    const fees=listing*feeRate,tax=listing*(a.taxPct/100),finalPrice=listing+tax;
+    const received=listing-fees,profit=received-base,realMargin=listing>0?(profit/listing)*100:0;
+    id('matSubtotal').textContent=fmt(matTotal);
+    id('laborOut').textContent=fmt(labor);
+    id('ohOut').textContent=fmt(ohUnit);
+    id('advProfitNum').textContent=a.profitPct;
+    id('bdBase').textContent=fmt(base);
+    id('bdProfitLbl').textContent=t('yourProfit')+' ('+a.profitPct+'% '+(a.profitMode==='markup'?t('markup'):t('margin')).toLowerCase()+')';
+    id('bdProfit').textContent=fmt(net-base);
+    id('bdFees').textContent='− '+fmt(fees);
+    id('bdTaxLbl').textContent=t('taxRow')+' ('+(a.taxPct||0)+'%)';
+    id('bdTax').textContent='+ '+fmt(tax);
+    id('bdReceive').textContent=fmt(received);
+    id('bdMargin').textContent=realMargin.toFixed(1)+'%';
+    id('advFinal').textContent=fmt(finalPrice);
+    pulse(id('advFinal'));setFill(advMargin);
+  }
+  function calc(){state.mode==='simple'?calcSimple():calcAdvanced();}
+
+  // ---- language ----
+  function applyLang(){
+    document.documentElement.lang=lang;
+    document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+    document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=t(el.dataset.ph));
+    matList.innerHTML='';state.advanced.materials.forEach(m=>addMaterial(m));
+    updateFooter();refreshProfitMode();renderItems();renderTemplates();calc();
+  }
+  id('langSeg').querySelectorAll('button').forEach(b=>{b.onclick=()=>{lang=b.dataset.l;id('langSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));applyLang();};});
+
+  // init
+  refreshProfitMode();renderItems();renderTemplates();setFill(id('margin'));applyLang();
+})();
+</script>
+</body>
+</html>

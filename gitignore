@@ -1,0 +1,31 @@
+# ---- OS files ----
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ---- Editor / IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Logs ----
+*.log
+
+# ---- Node / build tooling (only if you add a build step later) ----
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# ---- Environment / secrets ----
+.env
+.env.local
+.env.*.local
+
+# ---- Misc ----
+*.zip
