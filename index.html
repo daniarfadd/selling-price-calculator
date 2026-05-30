@@ -9,19 +9,33 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F3F5F3;--surface:#FFFFFF;--ink:#1E2522;--muted:#8A938C;--faint:#AEB6AF;
+    --bg:#F3F5F3;--bg-glow:#EAF0EB;--surface:#FFFFFF;--ink:#1E2522;--muted:#8A938C;--faint:#AEB6AF;
     --line:#ECEFEC;--accent:#5E8068;--accent-deep:#4C6B56;--accent-soft:#EAF1EC;
     --accent-tint:#F4F8F5;--danger:#C06B5E;
+    --res-from:#4C6B56;--res-to:#5E8068;
     --shadow:0 1px 2px rgba(30,37,34,.04),0 8px 24px rgba(30,37,34,.05);
     --shadow-lift:0 4px 12px rgba(30,37,34,.06),0 16px 40px rgba(30,37,34,.08);
     --r:18px;
   }
+  :root[data-theme="dark"]{
+    --bg:#141816;--bg-glow:#1B2620;--surface:#1C211E;--ink:#EAEFEA;--muted:#8E978F;--faint:#5E665F;
+    --line:#2A302C;--accent:#7FA98A;--accent-deep:#A6CBAE;--accent-soft:#243530;
+    --accent-tint:#1E2A23;--danger:#D69384;
+    --res-from:#3E5A48;--res-to:#557A62;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+    --shadow-lift:0 4px 12px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5);
+  }
   *{box-sizing:border-box;margin:0;padding:0;}
+  body,.card,.tpl,.seg,.mini-seg,.field,.result,.item,.stepper,.step-btn,.add-btn,.theme-btn,.pmode,.add-line,input{transition:background-color .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease;}
   html,body{height:100%;}
-  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(120% 90% at 50% -10%,#EAF0EB 0%,var(--bg) 55%);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100%;display:flex;justify-content:center;padding:clamp(14px,4vw,40px) 16px 64px;}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(120% 90% at 50% -10%,var(--bg-glow) 0%,var(--bg) 55%);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100%;display:flex;justify-content:center;padding:clamp(14px,4vw,40px) 16px 64px;}
   .app{width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px;}
 
-  .lang-row{display:flex;justify-content:flex-end;}
+  .lang-row{display:flex;justify-content:space-between;align-items:center;}
+  .theme-btn{border:none;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color .25s,color .25s,transform .12s;}
+  .theme-btn:hover{color:var(--accent);}
+  .theme-btn:active{transform:scale(.92);}
+  .theme-btn svg{width:18px;height:18px;}
   .mini-seg{display:inline-flex;background:var(--surface);border-radius:10px;padding:3px;box-shadow:var(--shadow);}
   .mini-seg button{border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);padding:6px 13px;border-radius:7px;cursor:pointer;transition:all .18s;letter-spacing:.02em;}
   .mini-seg button.on{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(76,107,86,.3);}
@@ -139,7 +153,7 @@
   input[type="range"]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--surface);border:none;box-shadow:0 0 0 5px var(--accent),0 2px 6px rgba(76,107,86,.35);}
   .scale{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums;}
 
-  .result{background:linear-gradient(155deg,var(--accent-deep),var(--accent));border-radius:var(--r);padding:28px 24px;color:#fff;box-shadow:var(--shadow-lift),0 12px 32px rgba(76,107,86,.28);position:relative;overflow:hidden;}
+  .result{background:linear-gradient(155deg,var(--res-from),var(--res-to));border-radius:var(--r);padding:28px 24px;color:#fff;box-shadow:var(--shadow-lift),0 12px 32px rgba(76,107,86,.28);position:relative;overflow:hidden;}
   .result::after{content:"";position:absolute;right:-40px;top:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none;}
   .result .lbl{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);}
   .price{margin-top:10px;font-size:clamp(36px,11vw,50px);font-weight:800;letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;transition:transform .12s;}
@@ -165,6 +179,7 @@
 <body>
   <main class="app">
     <div class="lang-row">
+      <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
       <div class="mini-seg" id="langSeg">
         <button data-l="en" class="on">EN</button>
         <button data-l="id">ID</button>
@@ -589,6 +604,22 @@
     updateFooter();refreshProfitMode();renderItems();renderTemplates();calc();
   }
   id('langSeg').querySelectorAll('button').forEach(b=>{b.onclick=()=>{lang=b.dataset.l;id('langSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));applyLang();};});
+
+  // ---- theme (dark / light) ----
+  const THEME_KEY='spc-theme';
+  const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 1.5v2.4M12 20.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M1.5 12h2.4M20.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>';
+  const safeGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+  const safeSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+  function setTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme);
+    id('themeBtn').innerHTML = theme==='dark'?SUN:MOON;
+    safeSet(THEME_KEY,theme);
+  }
+  id('themeBtn').onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+  const savedTheme=safeGet(THEME_KEY);
+  const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setTheme(savedTheme||(prefersDark?'dark':'light'));
 
   // init
   refreshProfitMode();renderItems();renderTemplates();setFill(id('margin'));applyLang();
