@@ -14,7 +14,11 @@ production cost and desired profit. Built as a single, dependency-free HTML file
 - **Pieces produced** stepper — split a batch cost across N units to get the
   per-piece selling price (e.g. Rp 5.000.000 ÷ 12 pieces, +50% margin →
   **Rp 625.000 / piece**, Rp 7.500.000 batch total).
-- Profit margin slider (0–200%).
+- **Forward / Reverse** switch:
+  - *Forward* — set a margin with the slider, get the selling price.
+  - *Reverse* — type a target or competitor selling price and instantly see the
+    margin it implies and your profit (per piece and for the batch). Selling
+    below cost shows a negative margin in red.
 - Real-time selling price.
 
 ### Advanced mode
@@ -29,6 +33,10 @@ production cost and desired profit. Built as a single, dependency-free HTML file
   and real margin %.
 
 ### Everywhere
+- **Discount simulator** — see what a flash-sale discount does to your profit
+  and margin, plus the **break-even discount** (the point where profit hits
+  zero). Works in both modes and accounts for marketplace fees and tax in
+  Advanced. Selling below cost is flagged in red.
 - **Export as PDF** — generates a clean, itemized quote / costing sheet in the
   active language and mode, with an optional business name. Uses the browser's
   built-in *Save as PDF*, so no libraries and it works offline.
