@@ -4,6 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sales Price Calculator</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F3F5F3">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Price Calc">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -174,6 +182,39 @@
     .mat,.mat-head{grid-template-columns:1fr 46px 84px auto;gap:5px;}
     .card{padding:18px;}
   }
+
+  /* export card */
+  .export-card{display:flex;flex-direction:column;gap:12px;}
+  .export-btn{border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14.5px;font-weight:600;padding:14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 8px rgba(94,128,104,.3);transition:background .2s,transform .12s;}
+  .export-btn:hover{background:var(--accent-deep);}
+  .export-btn:active{transform:scale(.98);}
+  .export-btn svg{width:17px;height:17px;}
+
+  /* printable quote document — hidden on screen, shown only when printing */
+  #printDoc{display:none;}
+  @media print{
+    body{background:#fff;padding:0;display:block;}
+    body *{visibility:hidden;}
+    #printDoc,#printDoc *{visibility:visible;}
+    #printDoc{display:block;position:absolute;top:0;left:0;width:100%;color:#111;font-size:12px;}
+    @page{margin:18mm;}
+    .pd-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #5E8068;padding-bottom:12px;margin-bottom:18px;}
+    .pd-biz{font-size:20px;font-weight:800;color:#1E2522;}
+    .pd-type{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5E8068;margin-top:3px;}
+    .pd-date{font-size:11px;color:#666;text-align:right;line-height:1.6;}
+    #printDoc table{width:100%;border-collapse:collapse;margin:10px 0 16px;}
+    #printDoc th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#888;border-bottom:1px solid #ddd;padding:6px 4px;font-weight:600;}
+    #printDoc td{padding:7px 4px;border-bottom:1px solid #eee;font-size:12px;}
+    #printDoc td.num,#printDoc th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+    .pd-rows{margin:6px 0 16px;}
+    .pd-row{display:flex;justify-content:space-between;padding:5px 4px;font-size:12px;border-bottom:1px dashed #eee;}
+    .pd-row .l{color:#555;}
+    .pd-row.b{font-weight:700;color:#1E2522;border-bottom:1px solid #ccc;}
+    .pd-final{margin-top:16px;background:#EAF1EC;border:1px solid #cfe0d4;border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;}
+    .pd-final .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4C6B56;}
+    .pd-final .v{font-size:26px;font-weight:800;color:#1E2522;font-variant-numeric:tabular-nums;}
+    .pd-note{margin-top:20px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px;}
+  }
 </style>
 </head>
 <body>
@@ -309,8 +350,18 @@
       </section>
     </div>
 
+    <section class="card export-card">
+      <div class="field"><input id="bizName" type="text" data-ph="bizNamePh" placeholder="Business / shop name (optional)" autocomplete="off" /></div>
+      <button class="export-btn" id="exportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        <span data-i18n="exportPdf">Export as PDF</span>
+      </button>
+    </section>
+
     <footer id="footer">Selling Price = Total Cost × (1 + Margin %)</footer>
   </main>
+
+  <div id="printDoc"></div>
 
 <script>
 (function(){
@@ -342,7 +393,12 @@
       feesRow:"Marketplace + payment fees",taxRow:"Tax / PPN",youReceive:"You actually receive",realMargin:"Real margin",
       footerSimple:"Selling Price = Total Cost × (1 + Margin %)",
       footerAdv:"Listing price is grossed up to absorb fees; tax is added for the customer.",
-      templateNamePrompt:"Template name:",defSimple:"Simple product",defAdvanced:"Advanced product"
+      templateNamePrompt:"Template name:",defSimple:"Simple product",defAdvanced:"Advanced product",
+      exportPdf:"Export as PDF",bizNamePh:"Business / shop name (optional)",
+      docTitleSimple:"Price Quote",docTitleAdvanced:"Costing Sheet",docDate:"Date",
+      colCost:"Cost",docPieces:"Pieces produced",docCostPerPiece:"Cost per piece",
+      docSellingPerPiece:"Selling price per piece",docBatchTotal:"Batch total",
+      docCurrencyNote:"All amounts in Indonesian Rupiah (Rp).",docGenerated:"Generated on"
     },
     id:{
       eyebrow:"Hitung harga dengan mudah",title:"Kalkulator Harga Jual",
@@ -371,7 +427,12 @@
       feesRow:"Biaya marketplace + pembayaran",taxRow:"Pajak / PPN",youReceive:"Yang kamu terima",realMargin:"Margin sebenarnya",
       footerSimple:"Harga Jual = Total Biaya × (1 + Margin %)",
       footerAdv:"Harga listing dinaikkan untuk menutup biaya; pajak ditambahkan untuk pembeli.",
-      templateNamePrompt:"Nama template:",defSimple:"Produk sederhana",defAdvanced:"Produk lanjutan"
+      templateNamePrompt:"Nama template:",defSimple:"Produk sederhana",defAdvanced:"Produk lanjutan",
+      exportPdf:"Ekspor ke PDF",bizNamePh:"Nama usaha / toko (opsional)",
+      docTitleSimple:"Penawaran Harga",docTitleAdvanced:"Lembar Perhitungan Biaya",docDate:"Tanggal",
+      colCost:"Biaya",docPieces:"Jumlah unit",docCostPerPiece:"Biaya per unit",
+      docSellingPerPiece:"Harga jual per unit",docBatchTotal:"Total batch",
+      docCurrencyNote:"Semua nominal dalam Rupiah (Rp).",docGenerated:"Dibuat pada"
     }
   };
   let lang='en';
@@ -506,7 +567,7 @@
     const name=(prompt(t('templateNamePrompt'),def)||'').trim();
     if(!name)return;
     state.templates.push({id:nextTpl++,name,mode:state.mode,data:JSON.parse(JSON.stringify(state.mode==='simple'?state.simple:state.advanced))});
-    renderTemplates();
+    persistTemplates();renderTemplates();
   };
   function loadTemplate(tp){
     setMode(tp.mode);
@@ -537,10 +598,16 @@
       c.innerHTML='<button class="load"></button><button class="x" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
       c.querySelector('.load').textContent=tp.name+(tp.mode==='advanced'?' ·'+t('advanced').toLowerCase():'');
       c.querySelector('.load').onclick=()=>loadTemplate(tp);
-      c.querySelector('.x').onclick=()=>{const i=state.templates.findIndex(x=>x.id===tp.id);if(i>-1)state.templates.splice(i,1);renderTemplates();};
+      c.querySelector('.x').onclick=()=>{const i=state.templates.findIndex(x=>x.id===tp.id);if(i>-1)state.templates.splice(i,1);persistTemplates();renderTemplates();};
       chips.appendChild(c);
     });
     id('tplEmpty').style.display=state.templates.length?'none':'block';
+  }
+  const TPL_KEY='spc-templates';
+  function persistTemplates(){ safeSet(TPL_KEY,JSON.stringify(state.templates)); }
+  function loadTemplatesFromStorage(){
+    try{ const raw=safeGet(TPL_KEY); if(!raw)return; const arr=JSON.parse(raw);
+      if(Array.isArray(arr)){ state.templates=arr; arr.forEach(tp=>{ if(tp.id>=nextTpl)nextTpl=tp.id+1; }); } }catch(e){}
   }
 
   // ---- calc ----
@@ -621,8 +688,84 @@
   const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
   setTheme(savedTheme||(prefersDark?'dark':'light'));
 
+  // ---- export / print quote ----
+  const BIZ_KEY='spc-biz';
+  const bizName=id('bizName');
+  bizName.value=safeGet(BIZ_KEY)||'';
+  bizName.addEventListener('input',()=>safeSet(BIZ_KEY,bizName.value));
+
+  function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+  function buildPrintDoc(){
+    const a=state.advanced;
+    const dateStr=new Date().toLocaleDateString(lang==='id'?'id-ID':'en-GB',{year:'numeric',month:'long',day:'numeric'});
+    const biz=bizName.value.trim()||t('title');
+    let body='';
+    if(state.mode==='simple'){
+      const total=state.simple.items.reduce((s,x)=>s+x.cost,0);
+      const m=state.simple.margin,pieces=Math.max(1,state.simple.pieces||1);
+      const costPer=total/pieces,sellPer=costPer*(1+m/100),batchTotal=total*(1+m/100);
+      let rows=state.simple.items.map(it=>'<tr><td>'+esc(it.name)+'</td><td class="num">'+fmt(it.cost)+'</td></tr>').join('');
+      if(!rows)rows='<tr><td colspan="2" style="color:#aaa;">—</td></tr>';
+      body+='<table><thead><tr><th>'+t('colItem')+'</th><th class="num">'+t('colCost')+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      body+='<div class="pd-rows">';
+      body+='<div class="pd-row b"><span class="l">'+t('totalProductionCost')+'</span><span>'+fmt(total)+'</span></div>';
+      if(pieces>1){
+        body+='<div class="pd-row"><span class="l">'+t('docPieces')+'</span><span>'+pieces+'</span></div>';
+        body+='<div class="pd-row"><span class="l">'+t('docCostPerPiece')+'</span><span>'+fmt(costPer)+'</span></div>';
+      }
+      body+='<div class="pd-row"><span class="l">'+t('profitMargin')+'</span><span>'+m+'%</span></div>';
+      body+='</div>';
+      if(pieces>1){
+        body+='<div class="pd-final"><span class="l">'+t('docSellingPerPiece')+'</span><span class="v">'+fmt(sellPer)+'</span></div>';
+        body+='<div class="pd-rows" style="margin-top:10px;"><div class="pd-row"><span class="l">×'+pieces+' &middot; '+t('docBatchTotal')+'</span><span>'+fmt(batchTotal)+'</span></div></div>';
+      }else{
+        body+='<div class="pd-final"><span class="l">'+t('sellingPrice')+'</span><span class="v">'+fmt(batchTotal)+'</span></div>';
+      }
+    }else{
+      const matTotal=a.materials.reduce((s,mm)=>s+(mm.qty*mm.unitCost),0);
+      const labor=a.laborHours*a.laborRate;
+      const ohUnit=a.batch>0?a.ohTotal/a.batch:0;
+      const base=matTotal+labor+ohUnit;
+      const p=a.profitPct/100;
+      const net=a.profitMode==='markup'?base*(1+p):(p<1?base/(1-p):0);
+      const feeRate=(a.mpFee+a.payFee)/100;
+      const listing=feeRate<1?net/(1-feeRate):0;
+      const fees=listing*feeRate,tax=listing*(a.taxPct/100),finalPrice=listing+tax;
+      const received=listing-fees,profit=received-base,realMargin=listing>0?(profit/listing)*100:0;
+      let rows=a.materials.map(mm=>'<tr><td>'+esc(mm.name||'—')+'</td><td class="num">'+(mm.qty||0)+'</td><td class="num">'+fmt(mm.unitCost)+'</td><td class="num">'+fmt(mm.qty*mm.unitCost)+'</td></tr>').join('');
+      if(!rows)rows='<tr><td colspan="4" style="color:#aaa;">—</td></tr>';
+      body+='<table><thead><tr><th>'+t('colItem')+'</th><th class="num">'+t('colQty')+'</th><th class="num">'+t('colUnitCost')+'</th><th class="num">'+t('colTotal')+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      body+='<div class="pd-rows">';
+      body+='<div class="pd-row"><span class="l">'+t('materialsSubtotal')+'</span><span>'+fmt(matTotal)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('laborCost')+'</span><span>'+fmt(labor)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('overheadPerUnit')+'</span><span>'+fmt(ohUnit)+'</span></div>';
+      body+='<div class="pd-row b"><span class="l">'+t('baseCostUnit')+'</span><span>'+fmt(base)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('yourProfit')+' ('+a.profitPct+'% '+(a.profitMode==='markup'?t('markup'):t('margin')).toLowerCase()+')</span><span>'+fmt(net-base)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('feesRow')+'</span><span>'+fmt(fees)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('taxRow')+' ('+(a.taxPct||0)+'%)</span><span>'+fmt(tax)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('youReceive')+'</span><span>'+fmt(received)+'</span></div>';
+      body+='<div class="pd-row"><span class="l">'+t('realMargin')+'</span><span>'+realMargin.toFixed(1)+'%</span></div>';
+      body+='</div>';
+      body+='<div class="pd-final"><span class="l">'+t('finalPrice')+'</span><span class="v">'+fmt(finalPrice)+'</span></div>';
+    }
+    const title=state.mode==='simple'?t('docTitleSimple'):t('docTitleAdvanced');
+    id('printDoc').innerHTML=
+      '<div class="pd-head"><div><div class="pd-biz">'+esc(biz)+'</div><div class="pd-type">'+title+'</div></div>'+
+      '<div class="pd-date">'+t('docDate')+': '+dateStr+'</div></div>'+
+      body+
+      '<div class="pd-note">'+t('docCurrencyNote')+' &middot; '+t('docGenerated')+' '+dateStr+'.</div>';
+  }
+  id('exportBtn').onclick=()=>{ buildPrintDoc(); window.print(); };
+
   // init
+  loadTemplatesFromStorage();
   refreshProfitMode();renderItems();renderTemplates();setFill(id('margin'));applyLang();
+
+  // ---- PWA: register service worker (only over http/https) ----
+  if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+    window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+  }
 })();
 </script>
 </body>

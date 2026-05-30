@@ -1,0 +1,16 @@
+{
+  "name": "Sales Price Calculator",
+  "short_name": "Price Calc",
+  "description": "Calculate a fair selling price from your production cost and profit margin. Works offline.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F5F3",
+  "theme_color": "#5E8068",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
